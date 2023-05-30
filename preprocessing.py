@@ -1,7 +1,3 @@
-from tmx2dataframe import tmx2dataframe
-
-
-from nltk.corpus import stopwords 
 from nltk.corpus import wordnet
 from nltk.tokenize import wordpunct_tokenize
 from nltk import pos_tag
@@ -11,11 +7,29 @@ import re
 
 import contractions
 
-stop_words = stopwords.words("english")
+import pandas as pd
+
 lemmatizer = WordNetLemmatizer()
 
-def load_data(filename):
-    metadata, df = tmx2dataframe.read(filename)
+def load_data(source, target):
+    data_source = []
+    with open(source, "r") as f:
+        lines_source = f.readlines()
+
+    for line in lines_source:
+        data_source.append(line)
+
+    data_target = []
+    with open(target, "r") as f:
+        lines_target = f.readlines()
+
+    for line in lines_target:
+        data_target.append(line)
+
+
+    df = pd.DataFrame(data_source, columns=['source'])
+    df['target'] = data_target
+
     return df
 
 # helper function to convert the pos tag format into something compatible with the lemmatizer
@@ -25,7 +39,7 @@ def get_wordnet_pos(treebank_tag):
     elif treebank_tag.startswith('V'):
         return wordnet.VERB
     elif treebank_tag.startswith('N'):
-        return wordnet.NOUN
+        return wordnet.NOUN 
     elif treebank_tag.startswith('R'):
         return wordnet.ADV
     else:
@@ -43,9 +57,8 @@ def clean_data(doc):
     return clean_tokens
 
 def main():
-    df = load_data('en-hu1.tmx')
-    print(df.head())
-    df['source_sentence'] = df['source_sentence'].apply(clean_data)
+    df = load_data('hu-en/europarl-v7.hu-en.en', 'hu-en/europarl-v7.hu-en.hu')
+    df['source'] = df['source'].apply(clean_data)
     df.to_csv('clean_df', index=False)
     print(df.head())
 
