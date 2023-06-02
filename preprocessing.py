@@ -11,24 +11,16 @@ import pandas as pd
 
 lemmatizer = WordNetLemmatizer()
 
-def delete_numbers(data):
-    for i in range(5):
-        for item in data['source'][i]:
-            print(item)
-        if len(data['source'].loc[i]) < 3:
-            data.drop(index=i)
-    return data
-
 def load_data(source, target):
     data_source = []
-    with open(source, "r") as f:
+    with open(source, "r", encoding='utf-8') as f:
         lines_source = f.readlines()
 
     for line in lines_source:
         data_source.append(line)
 
     data_target = []
-    with open(target, "r") as f:
+    with open(target, "r", encoding='utf-8') as f:
         lines_target = f.readlines()
 
     for line in lines_target:
@@ -57,7 +49,7 @@ def get_wordnet_pos(treebank_tag):
 def clean_data(doc, expand, lemma):
     if expand:
         doc = contractions.fix(doc)
-    doc = re.sub(r'[^a-zA-Z0-9.!?]+', ' ', doc) # remove every char that is not alphanumeric or end of sentence punctuation, keep spaces
+    doc = re.sub(r'[^áéőúűöüóía-zA-Z0-9.!?]+', ' ', doc) # remove every char that is not alphanumeric or end of sentence punctuation, keep spaces
     tokens = wordpunct_tokenize(doc) 
     lowercase_tokens = [token.lower() for token in tokens]
     if lemma:
@@ -67,13 +59,17 @@ def clean_data(doc, expand, lemma):
         clean_tokens = lowercase_tokens
     return clean_tokens
 
+def remove_noise(data):
+    for idx, line in enumerate(data['source'], start=0):
+        if len(line) < 3 and len(data['target'][idx]) < 3:
+            data = data.drop(index=idx)
+    return data
+
 def main():
     df = load_data('hu-en/europarl-v7.hu-en.en', 'hu-en/europarl-v7.hu-en.hu')
     df['source'] = df['source'].apply(lambda x: clean_data(x, expand=True, lemma=True))
     df['target'] = df['target'].apply(lambda x: clean_data(x, expand=False, lemma=False))
-    df.to_csv('clean_df', index=False)
-    print(df.head())
-
+    df = remove_noise(df)
     # Save to pickle
     df.to_pickle('clean-data.pkl')
     # Save with compression
@@ -81,7 +77,6 @@ def main():
 
     # Load pickle from disk
     df = pd.read_pickle('clean-data.pkl')
-
     print(df.head(20))
 
 if __name__ == "__main__":
