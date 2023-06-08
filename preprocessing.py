@@ -65,7 +65,7 @@ def remove_noise(data):
             data = data.drop(index=idx)
     return data
 
-def main():
+def preprocessing_proces():
     df = load_data('hu-en/europarl-v7.hu-en.en', 'hu-en/europarl-v7.hu-en.hu')
     df['source'] = df['source'].apply(lambda x: clean_data(x, expand=True, lemma=True))
     df['target'] = df['target'].apply(lambda x: clean_data(x, expand=False, lemma=False))
@@ -80,4 +80,4 @@ def main():
     print(df.head(20))
 
 if __name__ == "__main__":
-    main()
+    preprocessing_proces()
