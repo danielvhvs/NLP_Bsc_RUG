@@ -48,8 +48,8 @@ def evaluating_proces():
     en_size = len(en_tokenizer.word_index) + 1
     hu_size = len(hu_tokenizer.word_index) + 1
     
-    input_test = encoding(source_test,en_tokenizer,en_size)
-    output_test = encoding(target_test,hu_tokenizer,hu_size)
+    input_test = encoding(source_test,en_tokenizer,len(source[0]))
+    output_test = encoding(target_test,hu_tokenizer,len(source[0]))
 
     model = load_model("model.h5")
 
