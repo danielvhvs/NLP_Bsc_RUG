@@ -66,12 +66,12 @@ def setup_model(source,target):
 
 def training_model(input_seq,output_seq,model):
     model.fit(input_seq, output_seq, batch_size=128, epochs=10)
-    model.save('model.h5')
+    model.save('../model.h5')
     return
 
 def splitting():
-    df = pd.read_pickle('../clean-data.pkl')
-    print(df.head())
+    df = pd.read_pickle('../clean-data.pkl')[:10000]
+    print(len(df))
     x_train, x_test, y_train, y_test = train_test_split(df["source"], df["target"],
                                                         test_size=0.2,random_state=42)
     return x_train, x_test, y_train, y_test

@@ -51,7 +51,7 @@ def evaluating_proces():
     input_test = encoding(source_test,en_tokenizer,len(source[0]))
     output_test = encoding(target_test,hu_tokenizer,len(source[0]))
 
-    model = load_model("model.h5")
+    model = load_model("../model.h5")
 
     prediction = model.predict(input_test)
     
