@@ -92,23 +92,20 @@ def get_sequences(X, y, is_train, en_tokenizer=None, hu_tokenizer=None, maxlen=4
         hu_tokenizer = Tokenizer()
         hu_tokenizer.fit_on_texts(y)
 
-    en_vocab_size = len(en_tokenizer.word_index) + 1
-    hu_vocab_size = len(hu_tokenizer.word_index) + 1
-
     X_seq = en_tokenizer.texts_to_sequences(X)
     X_seq_padded = pad_sequences(X_seq, maxlen=maxlen, padding="post")
 
     y_seq = hu_tokenizer.texts_to_sequences(y)
     y_seq_padded = pad_sequences(y_seq, maxlen=maxlen, padding="post")
 
-    return X_seq_padded, y_seq_padded, en_tokenizer, en_vocab_size, hu_tokenizer, hu_vocab_size
+    return X_seq_padded, y_seq_padded, en_tokenizer, hu_tokenizer
 
 # https://blog.paperspace.com/pre-trained-word-embeddings-natural-language-processing/
 
 
-def get_glove_embeddings(word_index, embedding_dim=100):
+def get_glove_embeddings(word_index, embedding_dim=50):
     embeddings_index = {}
-    with open('../glove.6B/glove.6B.100d.txt') as f:
+    with open('../glove.6B/glove.6B.50d.txt') as f:
         for line in f:
             values = line.split()
             word = values[0]
@@ -155,10 +152,10 @@ def preprocessing_proces(do_clean, do_prep_input):
             df["source"], df["target"], test_size=0.2, random_state=seed)
 
         # Turn sentences into tokenized and padded sequences
-        X_train_seq_padded, y_train_seq_padded, en_tokenizer, en_vocab_size, hu_tokenizer, hu_vocab_size = get_sequences(
+        X_train_seq_padded, y_train_seq_padded, en_tokenizer, hu_tokenizer = get_sequences(
             X_train, y_train, is_train=True)
 
-        X_test_seq_padded, y_test_seq_padded, _, _, _, _ = get_sequences(
+        X_test_seq_padded, y_test_seq_padded, _, _ = get_sequences(
             X_test, y_test, is_train=False, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
         glove_embeddings = get_glove_embeddings(en_tokenizer.word_index)

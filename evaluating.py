@@ -1,22 +1,8 @@
 from pickle import load
 from keras.models import load_model
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from nltk.translate.bleu_score import sentence_bleu
 import pandas as pd
 import numpy as np
-
-
-def splitting():
-    df = pd.read_pickle('../clean-data.pkl')[:10000]
-    x_train, x_test, y_train, y_test = train_test_split(df["source"], df["target"],
-                                                        test_size=0.2, random_state=42)
-    return x_train, x_test, y_train, y_test
-
-
-def encoding(sequences, tokenizer, length):
-    seq = tokenizer.texts_to_sequences(sequences)
-    seq = pad_sequences(seq, maxlen=length, padding="post")
-    return seq
 
 
 def vector_to_word(embedding, tokenizer):
@@ -28,7 +14,7 @@ def vector_to_word(embedding, tokenizer):
     return None
 
 
-def data_to_sentences(sequences, tokenizer):
+def get_sentences(sequences, tokenizer):
     predictions = []
     for sentence in sequences:
         predict = ''
@@ -56,27 +42,19 @@ def join_every(sequences):
 
 
 def evaluating_proces():
-    source, source_test, target, target_test = splitting()
+
+    with open('../test_data.npy', 'rb') as f:
+        X_test = np.load(f)
+        y_test = np.load(f)
     en_tokenizer = load(open('../en_tokenizer.pkl', 'rb'))
     hu_tokenizer = load(open('../hu_tokenizer.pkl', 'rb'))
 
-    en_seq_length = len(source.iloc[0])*2
-    hu_seq_length = len(source.iloc[0])*2
-
-    # input_test = encoding(source_test, en_tokenizer, en_seq_length)
-    # output_test = encoding(target_test, hu_tokenizer, hu_seq_length)
-
-    input_train = encoding(source, en_tokenizer, en_seq_length)
-    output_train = encoding(target, hu_tokenizer, hu_seq_length)
-
     model = load_model("../model.h5")
-
-    prediction = model.predict(input_train[0:2])
-
-    print(prediction)
-
-    prediction_sentences = data_to_sentences(prediction, hu_tokenizer)
+    prediction = model.predict(X_test)
+    prediction_sentences = get_sentences(prediction, hu_tokenizer)
     print(prediction_sentences)
+
+    # bleu score stuff
     # actual_sentences = join_every(target_test)
     # pred_df = pd.DataFrame(
     #    {"actual": actual_sentences, "prediction": prediction_sentences})
