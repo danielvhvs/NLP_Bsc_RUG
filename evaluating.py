@@ -1,13 +1,16 @@
 from pickle import load
 from keras.models import load_model
-from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.bleu_score import corpus_bleu
 import pandas as pd
 import numpy as np
+
+from sklearn.model_selection import train_test_split
+
+seed = 42
 
 
 def vector_to_word(embedding, tokenizer):
     idx = np.argmax(embedding)
-    print("argmax", idx)
     for word, transform in tokenizer.word_index.items():
         if transform == idx:
             return word
@@ -43,18 +46,40 @@ def join_every(sequences):
 
 def evaluating_proces():
 
+    df = pd.read_pickle('../clean-data.pkl')
+    df_10k = df.head(50000)
+    # Split 80-10-10
+    X_train, X_val_test, y_train, y_val_test = train_test_split(
+        df_10k["source"], df_10k["target"], test_size=0.1, random_state=seed)
+
+    _, _, y_test, y_val = train_test_split(
+        X_val_test, y_val_test, test_size=0.5, random_state=seed)
+
     with open('../test_data.npy', 'rb') as f:
         X_test = np.load(f)
-        y_test = np.load(f)
-    en_tokenizer = load(open('../en_tokenizer.pkl', 'rb'))
-    hu_tokenizer = load(open('../hu_tokenizer.pkl', 'rb'))
+    with open('../valid_data.npy', 'rb') as f:
+        X_val = np.load(f)
 
-    model = load_model("../model.h5")
-    prediction = model.predict(X_test)
+    hu_tokenizer = load(open('../hu_tokenizer.pkl', 'rb'))
+    model = load_model("../model_colab2.h5")
+
+    prediction = model.predict(X_val)
+    print(prediction)
     prediction_sentences = get_sentences(prediction, hu_tokenizer)
-    print(prediction_sentences)
+    candidate_translations = [[sentence] for sentence in prediction_sentences]
+    print(candidate_translations)
+    reference_tokens = [sentence for sentence in y_val]
+    reference_translations = [[" ".join(sentence)]
+                              for sentence in reference_tokens]
 
     # bleu score stuff
+
+    bleu_score = corpus_bleu(reference_translations, candidate_translations)
+
+    # print(reference_translations)
+
+    print(bleu_score)
+
     # actual_sentences = join_every(target_test)
     # pred_df = pd.DataFrame(
     #    {"actual": actual_sentences, "prediction": prediction_sentences})

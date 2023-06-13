@@ -24,7 +24,7 @@ def define_model(in_vocab_size, out_vocab_size, embedding_matrix, in_seq_length=
     model.add(RepeatVector(out_seq_length))
     model.add(LSTM(100, return_sequences=True))
     # Prediction
-    model.add(TimeDistributed(Dense(out_vocab_size, activation='softmax')))
+    model.add(TimeDistributed(Dense(out_vocab_size, activation='linear')))
     # model.add(Dense(100, activation='relu'))
     # model.add(Dense(out_vocab_size, activation='softmax'))
 
@@ -42,18 +42,12 @@ def training_proces():
         X_train = np.load(f)
         y_train = np.load(f)
 
-    en_tokenizer = load(open('../en_tokenizer.pkl', 'rb'))
-    hu_tokenizer = load(open('../hu_tokenizer.pkl', 'rb'))
-
-    # en_vocab_size = len(en_tokenizer.word_index) + 1
-    # hu_vocab_size = len(hu_tokenizer.word_index) + 1
-
-    en_vocab_size = 20000
-    hu_vocab_size = 50000
+    en_vocab_size = 30000
+    hu_vocab_size = 90000
 
     model = define_model(en_vocab_size, hu_vocab_size, glove)
 
-    model.fit(X_train, y_train, batch_size=128, epochs=2)
+    model.fit(X_train, y_train, batch_size=128, epochs=5)
     model.save('../model.h5')
     return
 
