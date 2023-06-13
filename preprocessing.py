@@ -87,9 +87,9 @@ def remove_noise(data):
 def get_sequences(X, y, is_train, en_tokenizer=None, hu_tokenizer=None, maxlen=40):
     # Only create and fit a new tokenizer on the training set
     if is_train:
-        en_tokenizer = Tokenizer()
+        en_tokenizer = Tokenizer(num_words=20000)
         en_tokenizer.fit_on_texts(X)
-        hu_tokenizer = Tokenizer()
+        hu_tokenizer = Tokenizer(num_words=50000)
         hu_tokenizer.fit_on_texts(y)
 
     X_seq = en_tokenizer.texts_to_sequences(X)
@@ -158,10 +158,10 @@ def preprocessing_proces(do_clean, do_prep_input):
         X_test_seq_padded, y_test_seq_padded, _, _ = get_sequences(
             X_test, y_test, is_train=False, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
-        glove_embeddings = get_glove_embeddings(en_tokenizer.word_index)
+        # glove_embeddings = get_glove_embeddings(en_tokenizer.word_index)
 
-        with open('../glove_embeddings.npy', 'wb') as f:
-            np.save(f, glove_embeddings)
+        # with open('../glove_embeddings.npy', 'wb') as f:
+        #    np.save(f, glove_embeddings)
 
         dump(en_tokenizer, open('../en_tokenizer.pkl', 'wb'))
         dump(hu_tokenizer, open('../hu_tokenizer.pkl', 'wb'))
