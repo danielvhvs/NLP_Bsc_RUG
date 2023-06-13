@@ -89,7 +89,7 @@ def get_sequences(X, y, is_train, en_tokenizer=None, hu_tokenizer=None, maxlen=4
     if is_train:
         en_tokenizer = Tokenizer(num_words=20000)
         en_tokenizer.fit_on_texts(X)
-        hu_tokenizer = Tokenizer(num_words=50000)
+        hu_tokenizer = Tokenizer(num_words=30000)
         hu_tokenizer.fit_on_texts(y)
 
     X_seq = en_tokenizer.texts_to_sequences(X)
@@ -147,9 +147,10 @@ def preprocessing_proces(do_clean, do_prep_input):
         df = pd.read_pickle('../clean-data.pkl')
 
     if do_prep_input:
+        df_10k = df.head(10000)
         # Split 80-20
         X_train, X_test, y_train, y_test = train_test_split(
-            df["source"], df["target"], test_size=0.2, random_state=seed)
+            df_10k["source"], df_10k["target"], test_size=0.2, random_state=seed)
 
         # Turn sentences into tokenized and padded sequences
         X_train_seq_padded, y_train_seq_padded, en_tokenizer, hu_tokenizer = get_sequences(
