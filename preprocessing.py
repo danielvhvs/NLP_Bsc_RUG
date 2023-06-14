@@ -5,6 +5,7 @@ from nltk.stem import WordNetLemmatizer
 
 from keras.preprocessing.text import Tokenizer
 from keras.utils import pad_sequences
+from keras.utils import to_categorical
 
 from sklearn.model_selection import train_test_split
 
@@ -86,7 +87,10 @@ def remove_noise(data):
 
 def create_tokenizer(text, max_words=0):
     # tokenizer = Tokenizer(num_words=max_words)
-    tokenizer = Tokenizer()
+    if max_words == 0:
+        tokenizer = Tokenizer()
+    else:
+        tokenizer = Tokenizer(num_words=max_words)
     tokenizer.fit_on_texts(text)
     return tokenizer
 
@@ -97,16 +101,16 @@ def encode_sequences(tokenizer, text, pad_len):
     return seq
 
 
-def get_sequences(X, y=None, is_train=False, en_tokenizer=None, hu_tokenizer=None, maxlen=40):
+def get_encodings(X, y=None, is_train=False, en_tokenizer=None, hu_tokenizer=None, maxlen=40):
     # Only create and fit a new tokenizer on the training set
     if is_train:
         en_tokenizer = create_tokenizer(X)
-        hu_tokenizer = create_tokenizer(y)
+        hu_tokenizer = create_tokenizer(y, max_words=10_001)
 
-    y_seq_padded = encode_sequences(hu_tokenizer, y, maxlen)
-    X_seq_padded = encode_sequences(en_tokenizer, X, maxlen)
+    X_encoded = encode_sequences(en_tokenizer, X, maxlen)
+    y_encoded = encode_sequences(hu_tokenizer, y, maxlen)
 
-    return X_seq_padded, y_seq_padded, en_tokenizer, hu_tokenizer
+    return X_encoded, y_encoded, en_tokenizer, hu_tokenizer
 
 # https://blog.paperspace.com/pre-trained-word-embeddings-natural-language-processing/
 
@@ -155,21 +159,21 @@ def preprocessing_proces(do_clean, do_prep_input):
         df = pd.read_pickle('../clean-data.pkl')
 
     if do_prep_input:
-        df50k = df.head(10_000)
+        df10k = df.head(10_000)
         # Split 80-10-10
         X_train, X_val_test, y_train, y_val_test = train_test_split(
-            df50k["source"], df50k["target"], test_size=0.1, random_state=seed)
+            df10k["source"], df10k["target"], test_size=0.1, random_state=seed)
         X_test, X_val, y_test, y_val = train_test_split(
             X_val_test, y_val_test, test_size=0.5, random_state=seed)
 
         # Turn sentences into tokenized and padded sequences
-        X_train_seq_padded, y_train_seq_padded, en_tokenizer, hu_tokenizer = get_sequences(
+        X_train_encoded, y_train_encoded, en_tokenizer, hu_tokenizer = get_encodings(
             X_train, y_train, is_train=True)
 
-        X_val_seq_padded, y_val_seq_padded, _, _ = get_sequences(
+        X_val_encoded, y_val_encoded, _, _ = get_encodings(
             X=X_val, is_train=False, y=y_val, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
-        X_test_seq_padded, y_test_seq_padded, _, _ = get_sequences(
+        X_test_encoded, y_test_encoded, _, _ = get_encodings(
             X_test, y_test, is_train=False, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
         # glove_embeddings = get_glove_embeddings(en_tokenizer.word_index)
@@ -180,16 +184,16 @@ def preprocessing_proces(do_clean, do_prep_input):
         dump(hu_tokenizer, open('../hu_tokenizer.pkl', 'wb'))
 
         with open('../train_data.npy', 'wb') as f:
-            np.save(f, X_train_seq_padded)
-            np.save(f, y_train_seq_padded)
+            np.save(f, X_train_encoded)
+            np.save(f, y_train_encoded)
 
         with open('../test_data.npy', 'wb') as f:
-            np.save(f, X_test_seq_padded)
-            np.save(f, y_test_seq_padded)
+            np.save(f, X_test_encoded)
+            np.save(f, y_test_encoded)
 
         with open('../valid_data.npy', 'wb') as f:
-            np.save(f, X_val_seq_padded)
-            np.save(f, y_val_seq_padded)
+            np.save(f, X_val_encoded)
+            np.save(f, y_val_encoded)
 
 
 if __name__ == "__main__":
