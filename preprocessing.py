@@ -76,29 +76,35 @@ def clean_data(doc, expand, lemma):
 
 
 def remove_noise(data):
+    data = data.dropna()  # drop rows with missing translations
     # drop rows with fewer than 3 tokens
     for idx, line in enumerate(data['source'], start=0):
         if len(line) < 3 and len(data['target'][idx]) < 3:
             data = data.drop(index=idx)
-    data = data.dropna()  # drop rows with missing translations
     return data
+
+
+def create_tokenizer(text, max_words=0):
+    # tokenizer = Tokenizer(num_words=max_words)
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(text)
+    return tokenizer
+
+
+def encode_sequences(tokenizer, text, pad_len):
+    seq = tokenizer.texts_to_sequences(text)
+    seq = pad_sequences(seq, maxlen=pad_len, padding='post')
+    return seq
 
 
 def get_sequences(X, y=None, is_train=False, en_tokenizer=None, hu_tokenizer=None, maxlen=40):
     # Only create and fit a new tokenizer on the training set
     if is_train:
-        en_tokenizer = Tokenizer(num_words=30000)
-        en_tokenizer.fit_on_texts(X)
-        hu_tokenizer = Tokenizer(num_words=90000)
-        hu_tokenizer.fit_on_texts(y)
+        en_tokenizer = create_tokenizer(X)
+        hu_tokenizer = create_tokenizer(y)
 
-        y_seq = hu_tokenizer.texts_to_sequences(y)
-        y_seq_padded = pad_sequences(y_seq, maxlen=maxlen, padding="post")
-    else:
-        y_seq_padded = None
-
-    X_seq = en_tokenizer.texts_to_sequences(X)
-    X_seq_padded = pad_sequences(X_seq, maxlen=maxlen, padding="post")
+    y_seq_padded = encode_sequences(hu_tokenizer, y, maxlen)
+    X_seq_padded = encode_sequences(en_tokenizer, X, maxlen)
 
     return X_seq_padded, y_seq_padded, en_tokenizer, hu_tokenizer
 
@@ -149,11 +155,10 @@ def preprocessing_proces(do_clean, do_prep_input):
         df = pd.read_pickle('../clean-data.pkl')
 
     if do_prep_input:
-        df50k = df.head(50000)
+        df50k = df.head(10_000)
         # Split 80-10-10
         X_train, X_val_test, y_train, y_val_test = train_test_split(
             df50k["source"], df50k["target"], test_size=0.1, random_state=seed)
-
         X_test, X_val, y_test, y_val = train_test_split(
             X_val_test, y_val_test, test_size=0.5, random_state=seed)
 
@@ -161,10 +166,10 @@ def preprocessing_proces(do_clean, do_prep_input):
         X_train_seq_padded, y_train_seq_padded, en_tokenizer, hu_tokenizer = get_sequences(
             X_train, y_train, is_train=True)
 
-        X_val_seq_padded, _, _, _ = get_sequences(
+        X_val_seq_padded, y_val_seq_padded, _, _ = get_sequences(
             X=X_val, is_train=False, y=y_val, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
-        X_test_seq_padded, _, _, _ = get_sequences(
+        X_test_seq_padded, y_test_seq_padded, _, _ = get_sequences(
             X_test, y_test, is_train=False, en_tokenizer=en_tokenizer, hu_tokenizer=hu_tokenizer)
 
         # glove_embeddings = get_glove_embeddings(en_tokenizer.word_index)
@@ -180,9 +185,11 @@ def preprocessing_proces(do_clean, do_prep_input):
 
         with open('../test_data.npy', 'wb') as f:
             np.save(f, X_test_seq_padded)
+            np.save(f, y_test_seq_padded)
 
         with open('../valid_data.npy', 'wb') as f:
             np.save(f, X_val_seq_padded)
+            np.save(f, y_val_seq_padded)
 
 
 if __name__ == "__main__":
