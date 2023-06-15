@@ -5,4 +5,4 @@ numpy
 keras 
 nltk
 contractions
-pydot
+pydot # Dependency for the model plot, should remove if we dont' go with the plot
