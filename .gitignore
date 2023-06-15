@@ -1,3 +1,8 @@
 # Pychache
-
 __pycache__
+
+# Dataset
+en-fr.csv
+
+# Venv
+venv/
