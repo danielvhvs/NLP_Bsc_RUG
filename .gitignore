@@ -6,3 +6,5 @@ en-fr*.csv
 
 # Venv
 venv/
+
+.vscode
