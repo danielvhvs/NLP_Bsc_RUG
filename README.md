@@ -25,3 +25,8 @@ The code is provided in a Jupyter Notebook. The notebook can be run cell by cell
     - Model
     - Training
     - Evaluation 
+        
+## Note
+
+Data was outside of the folder because it was too big.
+Similar with the model
