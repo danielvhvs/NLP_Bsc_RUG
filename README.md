@@ -1,4 +1,4 @@
-# NLP_Bsc_RUG
+# Automatic English-to-French Translation
 
 ## Requirements
 
